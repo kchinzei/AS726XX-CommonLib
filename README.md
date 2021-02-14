@@ -42,7 +42,7 @@ An obvious difference is that AS7265x has 3 sensor chips while AS7262/7263 has o
 
 ## Internal structure
 
-Inside AS726XX-CommonLib manages a pointer to the original `AS7265X` or `AS726X` object depending on the detected hardware. It would be nicely rewritten if introducing an abstract class. However doing so requires a lot of rewriting of the SparkFun's original codes. The current approach is not C++ like, but it will absorb future changes in SparkFun codes [when they fix bugs in their codes](https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library/issues/11).
+Inside AS726XX-CommonLib manages a pointer to the original `AS7265X` or `AS726X` object depending on the detected hardware. It would be nicely rewritten using an abstract class. However doing so requires a lot of rewriting of the SparkFun's original codes. The current approach is not C++ like, but it will absorb future changes in SparkFun codes [when they fix bugs in their codes](https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library/issues/11).
 
 ## Note
 
