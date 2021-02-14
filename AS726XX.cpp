@@ -18,10 +18,9 @@
   THE SOFTWARE.
 */
 /*
-  ESP8266-AS7265x-Server
-  Make Asayake to Wake Project.
+  AS726XX-CommonLib
   Kiyo Chinzei
-  https://github.com/kchinzei/ESP8266-AS7265x-Server
+  https://github.com/kchinzei/AS726XX-CommonLib
 
   Wrapper class to interchangeably use SparkFun AS7262/AS7263/AS7265X
  */
@@ -31,6 +30,7 @@
 AS726XX::AS726XX() {
     dev5 = nullptr;
     dev2 = dev3 = nullptr;
+    _i2cPort = nullptr;
 }
 
 
@@ -68,6 +68,8 @@ boolean AS726XX::isConnected() {
 
 boolean AS726XX::_isConnected(uint8_t addr) {
     // AS7262/7263 Library does not have it. Use one in AS7265X library
+    if (!_i2cPort) return false; // You call it before begin().
+
     _i2cPort->beginTransmission(addr);
     if (_i2cPort->endTransmission() != 0)
         return false; //Sensor did not ACK
@@ -76,30 +78,39 @@ boolean AS726XX::_isConnected(uint8_t addr) {
 
 uint8_t AS726XX::getDeviceType() {
     if (dev5) return dev5->getDeviceType();
-    if (dev2) return dev2->getVersion();
-    if (dev3) return dev3->getVersion();
+    if (dev2 || dev3)
+        return virtualReadRegister(AS726x_DEVICE_TYPE);
     return 0;
 }
 
 uint8_t AS726XX::getHardwareVersion() {
     if (dev5) return dev5->getHardwareVersion();
-    if (dev2) return dev2->getVersion();
-    if (dev3) return dev3->getVersion();
+    if (dev2 || dev3)
+        return virtualReadRegister(AS726x_HW_VERSION);
     return 0;
 }
 
+#define AS726x_FW_VERSION_HIGH 0x02
+#define AS726x_FW_VERSION_LOW  0x03
+
 uint8_t AS726XX::getMajorFirmwareVersion() {
     if (dev5) return dev5->getMajorFirmwareVersion();
+    if (dev2 || dev3)
+        return virtualReadRegister(AS726x_FW_VERSION_LOW) >> 4;
     return 0;
 }
 
 uint8_t AS726XX::getPatchFirmwareVersion() {
     if (dev5) return dev5->getPatchFirmwareVersion();
+    if (dev2 || dev3)
+        return ((virtualReadRegister(AS726x_FW_VERSION_LOW) & 0x0F) << 2) | (virtualReadRegister(AS726x_FW_VERSION_HIGH) >> 6);
     return 0;
 }
 
 uint8_t AS726XX::getBuildFirmwareVersion() {
     if (dev5) return dev5->getBuildFirmwareVersion();
+    if (dev2 || dev3)
+        return virtualReadRegister(AS726x_FW_VERSION_LOW & 0x3F);
     return 0;
 }
 
@@ -145,18 +156,18 @@ void AS726XX::disableIndicator() {
 
 void AS726XX::enableBulb(uint8_t device) {
     if (dev5) dev5->enableBulb(device);
-    else if (device == AS72652_VISIBLE) {
-        if (dev2) dev2->enableBulb();
-        if (dev3) dev3->enableBulb();
-    }
+    else if (device == AS7265x_LED_WHITE && dev2)
+        dev2->enableBulb();
+    else if (device == AS7265x_LED_IR && dev3)
+        dev3->enableBulb();
 }
 
 void AS726XX::disableBulb(uint8_t device) {
     if (dev5) dev5->disableBulb(device);
-    else if (device == AS72652_VISIBLE) {
-        if (dev2) dev2->disableBulb();
-        if (dev3) dev3->disableBulb();
-    }
+    else if (device == AS7265x_LED_WHITE && dev2)
+        dev2->enableBulb();
+    else if (device == AS7265x_LED_IR && dev3)
+        dev3->enableBulb();
 }
 
 void AS726XX::setGain(uint8_t gain) {
@@ -179,10 +190,10 @@ void AS726XX::setIntegrationCycles(uint8_t cycleValue) {
 
 void AS726XX::setBulbCurrent(uint8_t current, uint8_t device) {
     if (dev5) dev5->setBulbCurrent(current, device);
-    else if (device == AS72652_VISIBLE) {
-        if (dev2) dev2->setBulbCurrent(current);
-        if (dev3) dev3->setBulbCurrent(current);
-    }
+    else if (device ==  AS7265x_LED_WHITE && dev2)
+        dev2->setBulbCurrent(current);
+    else if (device == AS7265x_LED_IR && dev3)
+        dev3->setBulbCurrent(current);
 }
 
 void AS726XX::setIndicatorCurrent(uint8_t current) {

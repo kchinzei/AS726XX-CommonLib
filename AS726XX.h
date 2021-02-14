@@ -18,10 +18,9 @@
   THE SOFTWARE.
 */
 /*
-  ESP8266-AS7265x-Server
-  Make Asayake to Wake Project.
+  AS726XX-CommonLib
   Kiyo Chinzei
-  https://github.com/kchinzei/ESP8266-AS7265x-Server
+  https://github.com/kchinzei/AS726XX-CommonLib
 
   Wrapper class to interchangeably use SparkFun AS7262/AS7263/AS7265X
  */
@@ -40,7 +39,7 @@ public:
 
     boolean begin(TwoWire &wirePort = Wire);
     boolean isConnected(); //Checks if sensor ack's the I2C request
-	
+
     uint8_t getDeviceType();
     uint8_t getHardwareVersion();
     uint8_t getMajorFirmwareVersion();
@@ -60,7 +59,7 @@ public:
     void disableBulb(uint8_t device);
 
     void setGain(uint8_t gain); //1 to 64x
-    void setMeasurementMode(uint8_t mode); 
+    void setMeasurementMode(uint8_t mode);
     void setIntegrationCycles(uint8_t cycleValue);
 
     void setBulbCurrent(uint8_t current, uint8_t device);
@@ -141,7 +140,7 @@ public:
     uint16_t getUnm() { return dev2? 570 : 760; }
     uint16_t getVnm() { return dev2? 600 : 810; }
     uint16_t getWnm() { return dev2? 650 : 860; }
-            
+
 private:
     AS7265X *dev5;
     AS726X  *dev2;
