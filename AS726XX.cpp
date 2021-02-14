@@ -165,9 +165,24 @@ void AS726XX::enableBulb(uint8_t device) {
 void AS726XX::disableBulb(uint8_t device) {
     if (dev5) dev5->disableBulb(device);
     else if (device == AS7265x_LED_WHITE && dev2)
-        dev2->enableBulb();
+        dev2->disableBulb();
     else if (device == AS7265x_LED_IR && dev3)
-        dev3->enableBulb();
+        dev3->disableBulb();
+}
+
+boolean AS726XX::isBulbAvailable(uint8_t device) {
+    switch (device) {
+    case AS7265x_LED_WHITE:
+        return isWhiteBulbAvailable();
+        break;
+    case AS7265x_LED_IR:
+        return isIRBulbAvailable();
+        break;
+    case AS7265x_LED_UV:
+        return isUVBulbAvailable();
+        break;
+    }
+    return false;
 }
 
 void AS726XX::setGain(uint8_t gain) {

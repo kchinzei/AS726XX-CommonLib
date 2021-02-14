@@ -120,6 +120,7 @@ public:
     boolean isUVBulbAvailable()    { return dev5 != nullptr; }
     boolean isWhiteBulbAvailable() { return dev5 != nullptr || dev2 != nullptr; }
     boolean isIRBulbAvailable()    { return dev5 != nullptr || dev3 != nullptr; }
+    boolean isBulbAvailable(uint8_t device);
     uint16_t getAnm() { return dev5? 410 : 0; }
     uint16_t getBnm() { return dev5? 435 : 0; }
     uint16_t getCnm() { return dev5? 460 : 0; }
