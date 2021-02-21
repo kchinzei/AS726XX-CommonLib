@@ -47,18 +47,121 @@ boolean AS726XX::begin(TwoWire &wirePort) {
 
         switch (val) {
         case SENSORTYPE_AS7262:
+#ifdef AS726X_INCLUDED
             dev2 = new AS726X;
+#endif
             break;
         case SENSORTYPE_AS7263:
+#ifdef AS726X_INCLUDED
             dev3 = new AS726X;
+#endif
             break;
         default:
             dev5 = new AS7265X;
         }
     }
-    if (dev5) return dev5->begin(wirePort);
-    if (dev2) return dev2->begin(wirePort);
-    if (dev3) return dev3->begin(wirePort);
+
+    boolean ret = false;
+    if (dev5) ret = dev5->begin(wirePort);
+    if (dev2) ret = dev2->begin(wirePort);
+    if (dev3) ret = dev3->begin(wirePort);
+
+    // Populate nm, getu, getc
+    if (ret) {
+        
+        uint16_t v = 0;
+        if (v = this->getAnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getA);
+            getc.push_back(&AS726XX::getCalibratedA);
+        }
+        if (v = this->getBnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getB);
+            getc.push_back(&AS726XX::getCalibratedB);
+        }
+        if (v = this->getCnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getC);
+            getc.push_back(&AS726XX::getCalibratedC);
+        }
+        if (v = this->getDnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getD);
+            getc.push_back(&AS726XX::getCalibratedD);
+        }
+        if (v = this->getEnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getE);
+            getc.push_back(&AS726XX::getCalibratedE);
+        }
+        if (v = this->getFnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getF);
+            getc.push_back(&AS726XX::getCalibratedF);
+        }
+        if (v = this->getGnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getG);
+            getc.push_back(&AS726XX::getCalibratedG);
+        }
+        if (v = this->getHnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getH);
+            getc.push_back(&AS726XX::getCalibratedH);
+        }
+        if (v = this->getInm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getI);
+            getc.push_back(&AS726XX::getCalibratedI);
+        }
+        if (v = this->getJnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getJ);
+            getc.push_back(&AS726XX::getCalibratedJ);
+        }
+        if (v = this->getKnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getK);
+            getc.push_back(&AS726XX::getCalibratedK);
+        }
+        if (v = this->getLnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getL);
+            getc.push_back(&AS726XX::getCalibratedL);
+        }
+        if (v = this->getRnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getR);
+            getc.push_back(&AS726XX::getCalibratedR);
+        }
+        if (v = this->getSnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getS);
+            getc.push_back(&AS726XX::getCalibratedS);
+        }
+        if (v = this->getTnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getT);
+            getc.push_back(&AS726XX::getCalibratedT);
+        }
+        if (v = this->getUnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getU);
+            getc.push_back(&AS726XX::getCalibratedU);
+        }
+        if (v = this->getVnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getV);
+            getc.push_back(&AS726XX::getCalibratedV);
+        }
+        if (v = this->getWnm()) {
+            nm.push_back(v);
+            getu.push_back(&AS726XX::getW);
+            getc.push_back(&AS726XX::getCalibratedW);
+        }
+    }
+    return ret;
 }
 
 boolean AS726XX::isConnected() {
@@ -67,7 +170,7 @@ boolean AS726XX::isConnected() {
 }
 
 boolean AS726XX::_isConnected(uint8_t addr) {
-    // AS7262/7263 Library does not have it. Use one in AS7265X library
+    // AS7262/7263 Library does not have it. Use code in AS7265X library
     if (!_i2cPort) return false; // You call it before begin().
 
     _i2cPort->beginTransmission(addr);

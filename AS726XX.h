@@ -22,7 +22,17 @@
   Kiyo Chinzei
   https://github.com/kchinzei/AS726XX-CommonLib
 
-  Wrapper class to interchangeably use SparkFun AS7262/AS7263/AS7265X
+  Wrapper class to interchangeably use SparkFun AS7262/AS7263 to AS7265X.
+  AS7265X has 3 sensors while AS7262/AS7263 one.
+  By using `AS726XX` class, your code can treat AS7262/AS7263 as if AS7265x is
+  connected - single code works for all.
+
+  Why not a child class of AS7265X?
+  You can also write a class AS726XX as a child class of AS7265X.
+  By doing so you can assure and inherit the interface of AS7265X.
+  When you connect AS7262/AS7263, you manage an AS726X object separately.
+  Simple. But that case allocates unused AS7265X object.
+  I wanted memory footprint as small as possible.
  */
 
 #ifndef _AS726XX_H
@@ -30,8 +40,22 @@
 
 #include "Arduino.h"
 #include "Wire.h"
-#include "SparkFun_AS7265X.h"
-#include "AS726X.h"
+
+#include <SparkFun_AS7265X.h>
+#include <AS726X.h> // if you don't have it, comment out this line.
+
+#ifdef _AS726X_h
+#define AS726X_INCLUDED
+#else
+// necessary to compile.
+#define AS726X_ADDR 0x49 //7-bit unshifted default I2C Address
+#define SENSORTYPE_AS7262 0x3E
+#define SENSORTYPE_AS7263 0x3F
+#define AS726x_DEVICE_TYPE 0x00
+#define AS726x_HW_VERSION 0x01
+#endif
+
+class AS726X_dummy; // We define later
 
 class AS726XX {
 public:
@@ -142,16 +166,44 @@ public:
     uint16_t getVnm() { return dev2? 600 : 810; }
     uint16_t getWnm() { return dev2? 650 : 860; }
 
+    /*
+      Instead of using getA() etc, you can do like
+      AS726XX sensor;
+      ...
+      for (auto itr=std::begin(sensor.getc); itr != std::end(sensor.getc); itr++)
+        float val = (sensor.*(*itr))();
+     */
+    using uint16_t_fptr = uint16_t (AS726XX::*)();
+    using float_fptr = float (AS726XX::*)();
+    std::vector<uint16_t> nm;
+    std::vector<uint16_t_fptr> getu;
+    std::vector<float_fptr> getc;
+
 private:
     AS7265X *dev5;
-    AS726X  *dev2;
-    AS726X  *dev3;
+#ifdef AS726X_INCLUDED
+    AS726X *dev2;
+    AS726X *dev3;
+#else
+    AS726X_dummy *dev2;
+    AS726X_dummy *dev3;
+#endif
     TwoWire *_i2cPort;
 
     boolean _isConnected(uint8_t addr);
     uint8_t virtualReadRegister(uint8_t virtualAddr);
     uint8_t readRegister(uint8_t addr);
     boolean writeRegister(uint8_t addr, uint8_t val);
+};
+
+class AS726X_dummy: public AS726XX {
+    // This class is to avoid compile error when AS726X.h not found.
+    // This class is not implemeted, instantiated.
+public:
+    void enableBulb() {} // dummy; do nothing
+    void disableBulb() {} // dummy; do nothing
+    void setBulbCurrent(uint8_t current) {} // dummy; do nothing
+    void setIntegrationTime(uint8_t a) {} // dummy; do nothing
 };
 
 #endif
