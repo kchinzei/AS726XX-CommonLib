@@ -20,7 +20,7 @@
 /*
   Test_AS726XX.ino
   Simple test code for AS726XX-CommonLib.
-  Examined for AS7265X and AS7262.
+  Examined for AS7265X, AS7262, AS7341.
   Kiyo Chinzei
   https://github.com/kchinzei/AS726XX-CommonLib
 */
@@ -33,7 +33,8 @@ AS726XX sensor;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("AS7262/7263/7265X Example");
+  Serial.println("AS7262/7263/7265X Example:");
+  Serial.println("This example work also for AS7341, but measurement returns 0, because it doesn't have getA()/getCalibratedA() etc.");
 
   if(sensor.begin() == false)
   {
@@ -41,6 +42,9 @@ void setup() {
     while(1);
   }
 
+  sensor.setIntegrationCycles(100);
+  sensor.setGain(AS7265X_GAIN_64X);
+  
   byte deviceType = sensor.getDeviceType();
   Serial.print("AMS Device Type: 0x");
   Serial.println(deviceType, HEX);
@@ -165,8 +169,9 @@ void setup() {
 }
 
 void loop() {
-  //sensor.takeMeasurements(); //This is a hard wait while all 18 channels are measured
-  sensor.takeMeasurementsWithBulb();
+  sensor.disableIndicator();
+  sensor.takeMeasurements(); //This is a hard wait while all channels are measured
+  // sensor.takeMeasurementsWithBulb();
 
   if (sensor.getAnm()) {
     Serial.print("  ");
@@ -261,4 +266,5 @@ void loop() {
     Serial.print(" ");
   }
   Serial.println("");
+  sensor.enableIndicator();
 }

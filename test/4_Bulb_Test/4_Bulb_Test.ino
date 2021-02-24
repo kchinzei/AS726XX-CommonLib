@@ -21,7 +21,7 @@ void setup() {
   Serial.begin(115200);
   delay(300);
   Serial.println("");
-  Serial.println("AS7265x Spectral Triad Example");
+  Serial.println("AS7262/7263/7265X/7341 Bulb test");
 
   if(sensor.begin() == false)
   {
@@ -80,6 +80,7 @@ void loop() {
   sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_WHITE);
   delay(1000);
 
+  Serial.print(i++); Serial.println(". No test of 100mA - a bit scary");
   Serial.print(i++); Serial.println(". Go back");
   sensor.disableIndicator();
   sensor.disableBulb(AS7265x_LED_WHITE);

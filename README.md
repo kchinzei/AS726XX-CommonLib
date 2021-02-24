@@ -2,13 +2,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Wrapper class for [SparkFun AS7262/7263](https://learn.sparkfun.com/tutorials/as726x-nirvi) and [SparkFun AS7265x](https://learn.sparkfun.com/tutorials/spectral-triad-as7265x-hookup-guide) to hide differences between them. Written as Arduino library, but it should work with PlatformIO.
+Wrapper class for [SparkFun AS7262/7263](https://learn.sparkfun.com/tutorials/as726x-nirvi), [Adafruit AS7341](https://learn.adafruit.com/adafruit-as7341-10-channel-light-color-sensor-breakout) and [SparkFun AS7265x](https://learn.sparkfun.com/tutorials/spectral-triad-as7265x-hookup-guide) to hide differences between them. Written as Arduino library, but it should work with PlatformIO.
 
-## About SparkFun [AS7262/7263](https://learn.sparkfun.com/tutorials/as726x-nirvi)/[7265x](https://learn.sparkfun.com/tutorials/spectral-triad-as7265x-hookup-guide)
+## About [AS7262/7263](https://learn.sparkfun.com/tutorials/as726x-nirvi)/[7265x](https://learn.sparkfun.com/tutorials/spectral-triad-as7265x-hookup-guide) and [AS7341](https://learn.adafruit.com/adafruit-as7341-10-channel-light-color-sensor-breakout)
 
-[AS7262/7263](https://learn.sparkfun.com/tutorials/as726x-nirvi)/[7265x](https://learn.sparkfun.com/tutorials/spectral-triad-as7265x-hookup-guide) are breakout boards with spectral sensors for visual light, NIR, and UV-NIR bands.
+[AS7262/7263](https://learn.sparkfun.com/tutorials/as726x-nirvi)/[7265x](https://learn.sparkfun.com/tutorials/spectral-triad-as7265x-hookup-guide) and [AS7341](https://learn.adafruit.com/adafruit-as7341-10-channel-light-color-sensor-breakout) are breakout boards from Sparkfun and Adafruit with spectral sensors for visual light, NIR, and UV-NIR bands. Basically, all these use AMS Chips therefore basic architecture is common and alike.
 
-Arduino library classes and functions for [AS7262/7263](https://github.com/sparkfun/Sparkfun_AS726X_Arduino_Library) and [AS7265x](https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library) are similar, but they are slightly different. So you must write slightly different code code to use these sensors. By using `AS726XX` class, your code can treat AS7262/AS7263 as if AS7265x is connected - single code works for all.
+Arduino library classes and functions for [AS7262/7263](https://github.com/sparkfun/Sparkfun_AS726X_Arduino_Library) and [AS7265x](https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library) from Sparkfun are similar, but they are slightly different. That of [AS7341](https://github.com/adafruit/Adafruit_AS7341) from Adafruit is certainly different. This means that you must write different codes to use these sensors. By using `AS726XX` class, your code can treat AS7262/AS7263 and AS7341 as if AS7265x is connected - single code works for all. (But of course, it's not capable to mimic missing hardware.)
 
 
 ![AS7265x](https://cdn.sparkfun.com/r/500-500/assets/parts/1/3/3/9/3/15050-SparkFun_Triad_Spectroscopy_Sensor_-_AS7265x__Qwiic_-01.jpg "Overview of AS7265x")
@@ -32,39 +32,49 @@ void setup() {
 
 You can find examples in [Test_AS726XX.ino](https://github.com/kchinzei/AS726XX-CommonLib/blob/master/Test_AS726XX/Test_AS726XX.ino) and my [ESP8266-AS7265x-Server](https://github.com/kchinzei/ESP8266-AS7265x-Server).
 
-### Vectors of available channels
+### Array of available channels
 
-`AS726XX` provides vectors to access available spectrum channels.
+`AS726XX` provides arrays to access available spectrum channels.
 Instead of using `getCalibratedA()` etc, you can do like:
 
 ```C++
 AS726XX sensor;
   ...
-for (auto itr=std::begin(sensor.getc); itr != std::end(sensor.getc); itr++) {
-   float val = (sensor.*(*itr))();
+for (int i; i<sensor.maxCh; i++) {
+   float val = sensor.readings[i];
    ...
 ```
 
 Available vectors are:
-- `std::vector<uint16_t> nm;` : Array of wavelengths in \[nm\].
-- `std::vector<uint16_t_fptr> getu;` : Array of class functions to get uncalibrated values such as `getA()`.
-- `std::vector<float_fptr> getc;` : Array of class functions to get calibrated values such as `getCalibratedA()`.
+- `uint16_t AS726XX::nm;` : Array of wavelengths in \[nm\].
+- `float AS726XX::readings;` : Array of obtained values.
+- `float AS726XX::cal_params;` : Array of calibration parameters for calibration, multiplied to `getCalibratedA() - W()`.
 
-These are defined as mutable array, but it is not intended to user modifies its contents. Doing so will result erroneous behavior.
+Except cal_params these are not intended to user modifies its contents.
 
 ### Compile without AS7262/7263 library
 
 If you don't need and want AS7262/7263 now, you can compile AS726XX-CommonLib without [AS7262/7263](https://github.com/sparkfun/Sparkfun_AS726X_Arduino_Library) library.
 When doing so, comment out `#include <AS726X.h>` in AS726XX.h
 
+Similarly if you don't use Adafruit AS7341, comment out `#include <Adafruit_AS7341.h>` in AS726XX.h
+
+(If `__has_include()` works, it could automatically switch without manual modification - this preprocessor of Arduino IDE does not correctly work currently.)
+
 ### H/W differences
 
-An obvious difference is that AS7265x has 3 sensor chips while AS7262/7263 has only one. `AS726XX` behaves as the following.
+An obvious difference is that AS7265x has 3 sensor chips while the others have only one. `AS726XX` behaves as the following.
 
 - **Spectrum bands:** Some peak frequency of spectrum bands do overwrap. However, the wavelength are different. You can examine the band's wavelength and if the band is available by using `uint16_t getAnm()` etc. Obtaining not-existing band spectrum returns 0.
 - **LED bulbs:** There are 3 LEDs on AS7265x while only one on AS7262/7263. You can examine if specific LED is available by using `boolean isUVBulbAvailable()` etc. Attempting to enable or disable not-existing LED is silently ignored.
 - **Temperature:** `uint8_t getTemperature(uint8_t deviceNumber)` provides temperature of each chip on AS7265x specified by `deviceNumber`. `float getTemperatureAverage()` gives the average of them. AS7262/7263 has only one chip, so it always returns the temperature of this chip regardless to `deviceNumber`.
 - **Acquisition time:** AS7265x takes more time to obtain spectrum value by using `getCalibratedA()` etc. However, integration time itself are almost same as AS7262/7263.
+
+AS7341 is a new IC and many minor differences from AS726x/AS7265x series.
+- **Indicator always on**. Not programmable.
+- **Much faster sampling cycle**. It's in microsec order while AS726x/AS7265x are in millisec orders.
+- **Gain is between 1/2 to 1024**. AS7265x/726x is limited to 64. If you provide the gain larger than `AS7265X_GAIN_64X` (=0x03) to AS7265x/726x, it cuts off to `AS7265X_GAIN_64X`.
+- Many interrupt modes.
 
 ### Internal structure
 
