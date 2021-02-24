@@ -30,7 +30,7 @@ void setup() {
   }
 ```
 
-You can find examples in [Test_AS726XX.ino](https://github.com/kchinzei/AS726XX-CommonLib/blob/master/Test_AS726XX/Test_AS726XX.ino) and my [ESP8266-AS7265x-Server](https://github.com/kchinzei/ESP8266-AS7265x-Server).
+You can find examples in [test](https://github.com/kchinzei/AS726XX-CommonLib/tree/master/test) and my [ESP8266-AS7265x-Server](https://github.com/kchinzei/ESP8266-AS7265x-Server).
 
 ### Array of available channels
 
