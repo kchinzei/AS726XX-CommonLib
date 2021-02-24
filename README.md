@@ -81,7 +81,7 @@ AS7341 is a new IC and many minor differences from AS726x/AS7265x series.
 Inside AS726XX-CommonLib manages a pointer to the original `AS7265X` or `AS726X` object depending on the detected hardware. It would be nicely rewritten using an abstract class. However doing so requires a lot of rewriting of the SparkFun's original codes. The current approach is not C++ like, but it will absorb future changes in SparkFun codes [when they fix bugs in their codes](https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library/issues/11).
 
 Why not a child class of `AS7265X`?
-You can also write a class `AS726XX` as a child class of `AS7265X`.
+You can also write the class `AS726XX` as a child class of `AS7265X`.
 By doing so you can assure and inherit the interface of `AS7265X`.
 When you connect AS7262/AS7263, you manage an `AS726X` object separately.
 Simple. But that case allocates unused `AS7265X` object.
@@ -89,7 +89,7 @@ I wanted memory footprint as small as possible.
 
 ## Note
 
-- Using AS7262, AS7263, AS7265x in the same I2C bus requires [Qwiic MUX board](https://learn.sparkfun.com/tutorials/qwiic-mux-hookup-guide) since they have the same I2C address.
+- Using AS7262, AS7263, AS7265x in the same I2C bus requires [Qwiic MUX board](https://learn.sparkfun.com/tutorials/qwiic-mux-hookup-guide) since they have the same I2C address. AS7341 will work as it's in a different I2C address. Current implementation does not allow both sensors chained in the same bus.
 - I don't have AS7263, means I did not tested for it.
 
 # License
