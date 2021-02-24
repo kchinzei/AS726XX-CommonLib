@@ -43,9 +43,9 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#include <SparkFun_AS7265X.h> // You need it.
-#include <AS726X.h>          // if you don't need/have it, comment out this line.
+#include <AS726X.h> // if you don't need/have it, comment out this line.
 #include <Adafruit_AS7341.h> // if you don't need/have it, comment out this line.
+#include <SparkFun_AS7265X.h> // You need it.
 
 #ifdef _AS726X_h
 #define AS726X_INCLUDED
@@ -75,7 +75,8 @@ public:
   uint8_t maxCh;
   uint16_t nm[AS726XX_MAX_CH];
   float readings[AS726XX_MAX_CH];
-  float cal_params[AS726XX_MAX_CH]; // static parameter to calibration. 1.0 by default
+  float cal_params[AS726XX_MAX_CH]; // static parameter to calibration. 1.0 by
+                                    // default
   boolean use_calibrated;
 
   boolean begin(TwoWire &wirePort = Wire);
@@ -179,12 +180,12 @@ public:
   uint16_t getKnm() { return dev5 ? 900 : (dev4 ? 910 : 0); }
   uint16_t getLnm() { return dev5 ? 940 : 0; }
 
-    uint16_t getRnm() { return dev2 ? 450 : (dev3||dev5 ? 610 : 0); }
-    uint16_t getSnm() { return dev2 ? 500 : (dev3||dev5 ? 680 : 0); }
-uint16_t getTnm() { return dev2 ? 550 : (dev3||dev5 ? 730 : 0); }
-uint16_t getUnm() { return dev2 ? 570 : (dev3||dev5 ? 760 : 0); }
-uint16_t getVnm() { return dev2 ? 600 : (dev3||dev5 ? 810 : 0); }
-uint16_t getWnm() { return dev2 ? 650 : (dev3||dev5 ? 860 : 0); }
+  uint16_t getRnm() { return dev2 ? 450 : (dev3 || dev5 ? 610 : 0); }
+  uint16_t getSnm() { return dev2 ? 500 : (dev3 || dev5 ? 680 : 0); }
+  uint16_t getTnm() { return dev2 ? 550 : (dev3 || dev5 ? 730 : 0); }
+  uint16_t getUnm() { return dev2 ? 570 : (dev3 || dev5 ? 760 : 0); }
+  uint16_t getVnm() { return dev2 ? 600 : (dev3 || dev5 ? 810 : 0); }
+  uint16_t getWnm() { return dev2 ? 650 : (dev3 || dev5 ? 860 : 0); }
 
 private:
   AS7265X *dev5;

@@ -106,8 +106,8 @@ boolean AS726XX::begin(TwoWire &wirePort) {
       ret = dev4->begin(AS7341_I2CADDR_DEFAULT, &wirePort);
 
     if (ret) {
-      // AS7341 measures in 2.8 microsec while AS726x/AS7265x run in 2.8 millisec.
-      // ATime x 1000 will give approx same sampling time to AS726x.
+      // AS7341 measures in 2.8 microsec while AS726x/AS7265x run in 2.8
+      // millisec. ATime x 1000 will give approx same sampling time to AS726x.
       dev4->setATIME(999);
       dev4->setASTEP(10);
     }
@@ -302,32 +302,34 @@ void AS726XX::takeMeasurements() {
     if (!measurement_start)
       dev4->enableSpectralMeasurement(true);
     measurement_start = true;
-    setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT); //Set mode to all 6-channels
-    while (!dataAvailable()) delay(1);
+    setMeasurementMode(
+        AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT); // Set mode to all 6-channels
+    while (!dataAvailable())
+      delay(1);
   } else {
-      if (dev5)
-          dev5->takeMeasurements();
-      if (dev2)
-          dev2->takeMeasurements();
-      if (dev3)
-          dev3->takeMeasurements();
-      populateReadings();
+    if (dev5)
+      dev5->takeMeasurements();
+    if (dev2)
+      dev2->takeMeasurements();
+    if (dev3)
+      dev3->takeMeasurements();
+    populateReadings();
   }
 }
 
 void AS726XX::takeMeasurementsWithBulb() {
   if (dev4) {
-      enableBulb(AS7265x_LED_WHITE);
-      takeMeasurements();
-      disableBulb(AS7265x_LED_WHITE);
+    enableBulb(AS7265x_LED_WHITE);
+    takeMeasurements();
+    disableBulb(AS7265x_LED_WHITE);
   } else {
-      if (dev5)
-          dev5->takeMeasurementsWithBulb();
-      if (dev2)
-          dev2->takeMeasurementsWithBulb();
-      if (dev3)
-          dev3->takeMeasurementsWithBulb();
-      populateReadings();
+    if (dev5)
+      dev5->takeMeasurementsWithBulb();
+    if (dev2)
+      dev2->takeMeasurementsWithBulb();
+    if (dev3)
+      dev3->takeMeasurementsWithBulb();
+    populateReadings();
   }
 }
 
@@ -390,14 +392,14 @@ void AS726XX::setGain(uint8_t gain) {
   if (dev4) {
     dev4->setGain(static_cast<as7341_gain_t>(gain));
   } else {
-      if (gain > AS7341_GAIN_64X)
-          gain = AS7341_GAIN_64X;
-      if (dev5)
-          dev5->setGain(gain);
-      if (dev2)
-          dev2->setGain(gain);
-      if (dev3)
-          dev3->setGain(gain);
+    if (gain > AS7341_GAIN_64X)
+      gain = AS7341_GAIN_64X;
+    if (dev5)
+      dev5->setGain(gain);
+    if (dev2)
+      dev2->setGain(gain);
+    if (dev3)
+      dev3->setGain(gain);
   }
 }
 
@@ -522,124 +524,124 @@ void AS726XX::populateReadings() {
       if (use_calibrated)
         *itr++ = getCalibratedB() * *cal++;
       else
-          *itr++ = getB();
+        *itr++ = getB();
     }
     if (getCnm()) {
-        if (use_calibrated)
-            *itr++ = getCalibratedC() * *cal++;
-        else
-          *itr++ = getC();
-      }
-      if (getDnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedD() * *cal++;
-        else
-          *itr++ = getD();
-      }
-      if (getEnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedE() * *cal++;
-        else
-          *itr++ = getE();
-      }
-      if (getFnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedF() * *cal++;
-        else
-          *itr++ = getF();
-      }
-      if (getGnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedG() * *cal++;
-        else
-          *itr++ = getG();
-      }
-      if (getHnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedH() * *cal++;
-        else
-          *itr++ = getH();
-      }
-      if (getInm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedI() * *cal++;
-        else
-          *itr++ = getI();
-      }
-      if (getJnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedJ() * *cal++;
-        else
-          *itr++ = getJ();
-      }
-      if (getKnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedK() * *cal++;
-        else
-          *itr++ = getK();
-      }
-      if (getLnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedL() * *cal++;
-        else
-          *itr++ = getL();
-      }
-      if (getRnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedR() * *cal++;
-        else
-          *itr++ = getR();
-      }
-      if (getSnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedS() * *cal++;
-        else
-          *itr++ = getS();
-      }
-      if (getTnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedT() * *cal++;
-        else
-          *itr++ = getT();
-      }
-      if (getUnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedU() * *cal++;
-        else
-          *itr++ = getU();
-      }
-      if (getVnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedV() * *cal++;
-        else
-          *itr++ = getV();
-      }
-      if (getWnm()) {
-        if (use_calibrated)
-          *itr++ = getCalibratedW() * *cal++;
-        else
-          *itr++ = getW();
-      }
+      if (use_calibrated)
+        *itr++ = getCalibratedC() * *cal++;
+      else
+        *itr++ = getC();
+    }
+    if (getDnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedD() * *cal++;
+      else
+        *itr++ = getD();
+    }
+    if (getEnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedE() * *cal++;
+      else
+        *itr++ = getE();
+    }
+    if (getFnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedF() * *cal++;
+      else
+        *itr++ = getF();
+    }
+    if (getGnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedG() * *cal++;
+      else
+        *itr++ = getG();
+    }
+    if (getHnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedH() * *cal++;
+      else
+        *itr++ = getH();
+    }
+    if (getInm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedI() * *cal++;
+      else
+        *itr++ = getI();
+    }
+    if (getJnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedJ() * *cal++;
+      else
+        *itr++ = getJ();
+    }
+    if (getKnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedK() * *cal++;
+      else
+        *itr++ = getK();
+    }
+    if (getLnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedL() * *cal++;
+      else
+        *itr++ = getL();
+    }
+    if (getRnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedR() * *cal++;
+      else
+        *itr++ = getR();
+    }
+    if (getSnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedS() * *cal++;
+      else
+        *itr++ = getS();
+    }
+    if (getTnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedT() * *cal++;
+      else
+        *itr++ = getT();
+    }
+    if (getUnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedU() * *cal++;
+      else
+        *itr++ = getU();
+    }
+    if (getVnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedV() * *cal++;
+      else
+        *itr++ = getV();
+    }
+    if (getWnm()) {
+      if (use_calibrated)
+        *itr++ = getCalibratedW() * *cal++;
+      else
+        *itr++ = getW();
+    }
   } else if (dev4) {
-      uint16_t buf[12];
-      dev4->getAllChannels(buf);
+    uint16_t buf[12];
+    dev4->getAllChannels(buf);
     int i = 0;
-      float *itr = readings;
-      float *cal = cal_params;
-      for (int j=0; j<maxCh; itr++, cal++, i++, j++) {
-        if (use_calibrated)
-          *itr = *cal * buf[i];
-        else
-          *itr = buf[i];
-        // i == 4 for clear, i == 5 for NIR.
-        if (i == 3)
-          i += 2;
-        // i == 10 for clear, i == 11 for NIR.
-        if (i == 9)
-          i++;
-      }
-      if (measurement_mode == AS7265X_MEASUREMENT_MODE_6CHAN_CONTINUOUS)
-          dev4->startReading();
+    float *itr = readings;
+    float *cal = cal_params;
+    for (int j = 0; j < maxCh; itr++, cal++, i++, j++) {
+      if (use_calibrated)
+        *itr = *cal * buf[i];
+      else
+        *itr = buf[i];
+      // i == 4 for clear, i == 5 for NIR.
+      if (i == 3)
+        i += 2;
+      // i == 10 for clear, i == 11 for NIR.
+      if (i == 9)
+        i++;
+    }
+    if (measurement_mode == AS7265X_MEASUREMENT_MODE_6CHAN_CONTINUOUS)
+      dev4->startReading();
   }
 }
 
