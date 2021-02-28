@@ -30,7 +30,7 @@ void setup() {
   }
 ```
 
-You can find examples in [test](https://github.com/kchinzei/AS726XX-CommonLib/tree/master/test) and my [ESP8266-AS7265x-Server](https://github.com/kchinzei/ESP8266-AS7265x-Server).
+You can find examples in [Test_AS726XX.ino](https://github.com/kchinzei/AS726XX-CommonLib/blob/master/Test_AS726XX/Test_AS726XX.ino) and my [ESP8266-AS7265x-Server](https://github.com/kchinzei/ESP8266-AS7265x-Server).
 
 ### Array of available channels
 
@@ -41,16 +41,16 @@ Instead of using `getCalibratedA()` etc, you can do like:
 AS726XX sensor;
   ...
 for (int i; i<sensor.maxCh; i++) {
-   float val = sensor.readings[i];
+   float val = sensor.readings[i];ÂÂ
    ...
 ```
 
-Available vectors are:
+Available arrays are:
 - `uint16_t AS726XX::nm;` : Array of wavelengths in \[nm\].
 - `float AS726XX::readings;` : Array of obtained values.
 - `float AS726XX::cal_params;` : Array of calibration parameters for calibration, multiplied to `getCalibratedA() - W()`.
 
-Except cal_params these are not intended to user modifies its contents.
+Array length is in `AS726XX::maxCh`. These are not intended to user modifies its contents except `cal_params`.
 
 ### Compile without AS7262/7263 library
 
@@ -73,7 +73,7 @@ An obvious difference is that AS7265x has 3 sensor chips while the others have o
 AS7341 is a new IC and many minor differences from AS726x/AS7265x series.
 - **Indicator always on**. Not programmable.
 - **Much faster sampling cycle**. It's in microsec order while AS726x/AS7265x are in millisec orders.
-- **Gain is between 1/2 to 1024**. AS7265x/726x is limited to 64. If you provide the gain larger than `AS7265X_GAIN_64X` (=0x03) to AS7265x/726x, it cuts off to `AS7265X_GAIN_64X`.
+- **Gain is between 1/2 and 512**. AS7265x/726x is between 1 and 64. If you provide the gain larger than `AS7265X_GAIN_64X` (=0x03) to AS7265x/726x, it cuts off to `AS7265X_GAIN_64X`.
 - Many interrupt modes.
 
 ### Internal structure
@@ -81,7 +81,7 @@ AS7341 is a new IC and many minor differences from AS726x/AS7265x series.
 Inside AS726XX-CommonLib manages a pointer to the original `AS7265X` or `AS726X` object depending on the detected hardware. It would be nicely rewritten using an abstract class. However doing so requires a lot of rewriting of the SparkFun's original codes. The current approach is not C++ like, but it will absorb future changes in SparkFun codes [when they fix bugs in their codes](https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library/issues/11).
 
 Why not a child class of `AS7265X`?
-You can also write the class `AS726XX` as a child class of `AS7265X`.
+You can also write a class `AS726XX` as a child class of `AS7265X`.
 By doing so you can assure and inherit the interface of `AS7265X`.
 When you connect AS7262/AS7263, you manage an `AS726X` object separately.
 Simple. But that case allocates unused `AS7265X` object.
@@ -89,7 +89,7 @@ I wanted memory footprint as small as possible.
 
 ## Note
 
-- Using AS7262, AS7263, AS7265x in the same I2C bus requires [Qwiic MUX board](https://learn.sparkfun.com/tutorials/qwiic-mux-hookup-guide) since they have the same I2C address. AS7341 will work as it's in a different I2C address. Current implementation does not allow both sensors chained in the same bus.
+- Using AS7262, AS7263, AS7265x in the same I2C bus requires [Qwiic MUX board](https://learn.sparkfun.com/tutorials/qwiic-mux-hookup-guide) since they have the same I2C address.
 - I don't have AS7263, means I did not tested for it.
 
 # License

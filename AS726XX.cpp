@@ -27,6 +27,9 @@
 
 #include "AS726XX.h"
 
+#define AS726XX_CHIP_ID 0x40
+#define SENSORTYPE_AS7265X 0x41
+
 #ifndef _AS726X_h
 // necessary to compile.
 #define AS726X_ADDR 0x49 // 7-bit unshifted default I2C Address
@@ -39,7 +42,6 @@
 #ifndef _ADAFRUIT_AS7341_H
 // necessary to compile.
 #define AS7341_I2CADDR_DEFAULT 0x39 ///< AS7341 default i2c address
-#define AS7341_CHIP_ID 0x09         ///< AS7341 default device id from WHOAMI
 #define AS7341_CHIP_ID 0x09         ///< AS7341 default device id from WHOAMI
 #define AS7341_GAIN_4X AS7341_GAIN_1X
 #define AS7341_GAIN_16X AS7341_GAIN_1X
@@ -106,10 +108,12 @@ boolean AS726XX::begin(TwoWire &wirePort) {
       ret = dev4->begin(AS7341_I2CADDR_DEFAULT, &wirePort);
 
     if (ret) {
-      // AS7341 measures in 2.8 microsec while AS726x/AS7265x run in 2.8
-      // millisec. ATime x 1000 will give approx same sampling time to AS726x.
-      dev4->setATIME(999);
-      dev4->setASTEP(10);
+      // AS7341 measures in 2.78 microsec while AS726x/AS7265x run in 2.8
+      // millisec. ATime x 1000 will give approx same sampling time to AS726x,
+      // But max of ATime is 255. We multiply ASTEP 4 to get equivalent cycles
+      // to AS726x/AS7265x.
+      dev4->setATIME(249);
+      dev4->setASTEP(3);
     }
   }
 
@@ -230,13 +234,34 @@ boolean AS726XX::_isConnected(uint8_t addr) {
   return true;
 }
 
+uint16_t AS726XX::getDeviceNumber() {
+  uint8_t dType = getDeviceType();
+  uint16_t dNum = 0;
+  if (dType == AS7341_CHIP_ID)
+    dNum = 7341;
+  else if (dType == AS726XX_CHIP_ID) {
+    switch (getHardwareVersion()) {
+    case SENSORTYPE_AS7262:
+      dNum = 7262;
+      break;
+    case SENSORTYPE_AS7263:
+      dNum = 7263;
+      break;
+    case SENSORTYPE_AS7265X:
+      dNum = 7265;
+      break;
+    }
+  }
+  return dNum;
+}
+
 uint8_t AS726XX::getDeviceType() {
   if (dev5)
     return dev5->getDeviceType();
   if (dev2 || dev3)
     return virtualReadRegister(AS726x_DEVICE_TYPE);
   if (dev4)
-    return AS7341_CHIP_ID;
+    return readRegister(AS7341_I2CADDR_DEFAULT, AS7341_ID) >> 2;
   return 0;
 }
 
@@ -245,6 +270,8 @@ uint8_t AS726XX::getHardwareVersion() {
     return dev5->getHardwareVersion();
   if (dev2 || dev3)
     return virtualReadRegister(AS726x_HW_VERSION);
+  if (dev4)
+    return readRegister(AS7341_I2CADDR_DEFAULT, AS7341_REVID) & 0b111;
   return 0;
 }
 
@@ -256,6 +283,8 @@ uint8_t AS726XX::getMajorFirmwareVersion() {
     return dev5->getMajorFirmwareVersion();
   if (dev2 || dev3)
     return virtualReadRegister(AS726x_FW_VERSION_LOW) >> 4;
+  if (dev4)
+    return readRegister(AS7341_I2CADDR_DEFAULT, AS7341_AUXID) & 0b1111;
   return 0;
 }
 
@@ -423,8 +452,12 @@ void AS726XX::setIntegrationCycles(uint8_t cycleValue) {
     dev2->setIntegrationTime(cycleValue);
   if (dev3)
     dev3->setIntegrationTime(cycleValue);
-  if (dev4)
-    dev4->setASTEP(cycleValue);
+  if (dev4) {
+    // To make integration cycle as close as to AS726x/AS7265x.
+    // We set ATIME to 249 (= 1/4 * 2.78 msec)
+    uint16_t t4 = (uint16_t)cycleValue * 4 - 1;
+    dev4->setASTEP(t4);
+  }
 }
 
 void AS726XX::setBulbCurrent(uint8_t current, uint8_t device) {
@@ -622,6 +655,25 @@ void AS726XX::populateReadings() {
       else
         *itr++ = getW();
     }
+  } else if (dev2) {
+    if (use_calibrated) {
+      float *itr = readings;
+      float *cal = cal_params;
+      *itr++ = *cal++ * dev2->getCalibratedViolet();
+      *itr++ = *cal++ * dev2->getCalibratedBlue();
+      *itr++ = *cal++ * dev2->getCalibratedGreen();
+      *itr++ = *cal++ * dev2->getCalibratedYellow();
+      *itr++ = *cal++ * dev2->getCalibratedOrange();
+      *itr++ = *cal++ * dev2->getCalibratedRed();
+    } else {
+      float *itr = readings;
+      *itr++ = dev2->getViolet();
+      *itr++ = dev2->getBlue();
+      *itr++ = dev2->getGreen();
+      *itr++ = dev2->getYellow();
+      *itr++ = dev2->getOrange();
+      *itr++ = dev2->getRed();
+    }
   } else if (dev4) {
     uint16_t buf[12];
     dev4->getAllChannels(buf);
@@ -734,7 +786,7 @@ float AS726XX::getCalibratedR() {
   if (dev5)
     return dev5->getCalibratedR();
   if (dev2)
-    return dev2->getCalibratedR();
+    return dev2->getCalibratedViolet();
   if (dev3)
     return dev3->getCalibratedR();
   else
@@ -745,7 +797,7 @@ float AS726XX::getCalibratedS() {
   if (dev5)
     return dev5->getCalibratedS();
   if (dev2)
-    return dev2->getCalibratedS();
+    return dev2->getCalibratedBlue();
   if (dev3)
     return dev3->getCalibratedS();
   else
@@ -756,7 +808,7 @@ float AS726XX::getCalibratedT() {
   if (dev5)
     return dev5->getCalibratedT();
   if (dev2)
-    return dev2->getCalibratedT();
+    return dev2->getCalibratedGreen();
   if (dev3)
     return dev3->getCalibratedT();
   else
@@ -767,7 +819,7 @@ float AS726XX::getCalibratedU() {
   if (dev5)
     return dev5->getCalibratedU();
   if (dev2)
-    return dev2->getCalibratedU();
+    return dev2->getCalibratedYellow();
   if (dev3)
     return dev3->getCalibratedU();
   else
@@ -778,7 +830,7 @@ float AS726XX::getCalibratedV() {
   if (dev5)
     return dev5->getCalibratedV();
   if (dev2)
-    return dev2->getCalibratedV();
+    return dev2->getCalibratedOrange();
   if (dev3)
     return dev3->getCalibratedV();
   else
@@ -789,7 +841,7 @@ float AS726XX::getCalibratedW() {
   if (dev5)
     return dev5->getCalibratedW();
   if (dev2)
-    return dev2->getCalibratedW();
+    return dev2->getCalibratedRed();
   if (dev3)
     return dev3->getCalibratedW();
   else
@@ -885,7 +937,7 @@ uint16_t AS726XX::getR() {
   if (dev5)
     return dev5->getR();
   if (dev2)
-    return dev2->getR();
+    return dev2->getViolet();
   if (dev3)
     return dev3->getR();
   else
@@ -896,7 +948,7 @@ uint16_t AS726XX::getS() {
   if (dev5)
     return dev5->getS();
   if (dev2)
-    return dev2->getS();
+    return dev2->getBlue();
   if (dev3)
     return dev3->getS();
   else
@@ -907,7 +959,7 @@ uint16_t AS726XX::getT() {
   if (dev5)
     return dev5->getT();
   if (dev2)
-    return dev2->getT();
+    return dev2->getGreen();
   if (dev3)
     return dev3->getT();
   else
@@ -918,7 +970,7 @@ uint16_t AS726XX::getU() {
   if (dev5)
     return dev5->getU();
   if (dev2)
-    return dev2->getU();
+    return dev2->getYellow();
   if (dev3)
     return dev3->getU();
   else
@@ -929,7 +981,7 @@ uint16_t AS726XX::getV() {
   if (dev5)
     return dev5->getV();
   if (dev2)
-    return dev2->getV();
+    return dev2->getOrange();
   if (dev3)
     return dev3->getV();
   else
@@ -940,7 +992,7 @@ uint16_t AS726XX::getW() {
   if (dev5)
     return dev5->getW();
   if (dev2)
-    return dev2->getW();
+    return dev2->getRed();
   if (dev3)
     return dev3->getW();
   else
@@ -954,15 +1006,15 @@ uint8_t AS726XX::virtualReadRegister(uint8_t virtualAddr) {
   uint8_t status;
 
   // Do a prelim check of the read register
-  status = readRegister(AS7265X_STATUS_REG);
+  status = readRegister(AS7265X_ADDR, AS7265X_STATUS_REG);
   if ((status & AS7265X_RX_VALID) != 0) { // There is data to be read
-    uint8_t incoming =
-        readRegister(AS7265X_READ_REG); // Read the byte but do nothing with it
+    uint8_t incoming = readRegister(
+        AS7265X_ADDR, AS7265X_READ_REG); // Read the byte but do nothing with it
   }
 
   // Wait for WRITE flag to clear
   while (1) {
-    status = readRegister(AS7265X_STATUS_REG);
+    status = readRegister(AS7265X_ADDR, AS7265X_STATUS_REG);
     if ((status & AS7265X_TX_VALID) == 0)
       break; // If TX bit is clear, it is ok to write
     delay(AS7265X_POLLING_DELAY);
@@ -970,30 +1022,30 @@ uint8_t AS726XX::virtualReadRegister(uint8_t virtualAddr) {
 
   // Send the virtual register address (bit 7 should be 0 to indicate we are
   // reading a register).
-  writeRegister(AS7265X_WRITE_REG, virtualAddr);
+  writeRegister(AS7265X_ADDR, AS7265X_WRITE_REG, virtualAddr);
 
   // Wait for READ flag to be set
   while (1) {
-    status = readRegister(AS7265X_STATUS_REG);
+    status = readRegister(AS7265X_ADDR, AS7265X_STATUS_REG);
     if ((status & AS7265X_RX_VALID) != 0)
       break; // Read data is ready.
     delay(AS7265X_POLLING_DELAY);
   }
 
-  uint8_t incoming = readRegister(AS7265X_READ_REG);
+  uint8_t incoming = readRegister(AS7265X_ADDR, AS7265X_READ_REG);
   return (incoming);
 }
 
 // Reads from a give location from the AS726x
-uint8_t AS726XX::readRegister(uint8_t addr) {
-  _i2cPort->beginTransmission(AS7265X_ADDR);
+uint8_t AS726XX::readRegister(uint8_t i2c_addr, uint8_t addr) {
+  _i2cPort->beginTransmission(i2c_addr);
   _i2cPort->write(addr);
   if (_i2cPort->endTransmission() != 0) {
     // Serial.println("No ack!");
     return (0); // Device failed to ack
   }
 
-  _i2cPort->requestFrom((uint8_t)AS7265X_ADDR, (uint8_t)1);
+  _i2cPort->requestFrom(i2c_addr, (uint8_t)1);
   if (_i2cPort->available()) {
     return (_i2cPort->read());
   }
@@ -1003,8 +1055,8 @@ uint8_t AS726XX::readRegister(uint8_t addr) {
 }
 
 // Write a value to a spot in the AS726x
-boolean AS726XX::writeRegister(uint8_t addr, uint8_t val) {
-  _i2cPort->beginTransmission(AS7265X_ADDR);
+boolean AS726XX::writeRegister(uint8_t i2c_addr, uint8_t addr, uint8_t val) {
+  _i2cPort->beginTransmission(i2c_addr);
   _i2cPort->write(addr);
   _i2cPort->write(val);
   if (_i2cPort->endTransmission() != 0) {

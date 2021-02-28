@@ -75,8 +75,7 @@ public:
   uint8_t maxCh;
   uint16_t nm[AS726XX_MAX_CH];
   float readings[AS726XX_MAX_CH];
-  float cal_params[AS726XX_MAX_CH]; // static parameter to calibration. 1.0 by
-                                    // default
+  float cal_params[AS726XX_MAX_CH]; // calibration parameter. 1.0 by default
   boolean use_calibrated;
 
   boolean begin(TwoWire &wirePort = Wire);
@@ -88,8 +87,7 @@ public:
   uint8_t getPatchFirmwareVersion();
   uint8_t getBuildFirmwareVersion();
 
-  uint8_t
-  getTemperature(uint8_t deviceNumber = 0); // Get temp in C of the master IC
+  uint8_t getTemperature(uint8_t deviceNumber = 0);
   float getTemperatureAverage();
 
   void takeMeasurements();
@@ -160,6 +158,7 @@ public:
   uint16_t getW();
 
   // Original functions
+
   boolean isUVBulbAvailable() { return dev5 != nullptr; }
   boolean isWhiteBulbAvailable() {
     return dev5 != nullptr || dev2 != nullptr || dev4 != nullptr;
@@ -180,12 +179,14 @@ public:
   uint16_t getKnm() { return dev5 ? 900 : (dev4 ? 910 : 0); }
   uint16_t getLnm() { return dev5 ? 940 : 0; }
 
-  uint16_t getRnm() { return dev2 ? 450 : (dev3 || dev5 ? 610 : 0); }
-  uint16_t getSnm() { return dev2 ? 500 : (dev3 || dev5 ? 680 : 0); }
-  uint16_t getTnm() { return dev2 ? 550 : (dev3 || dev5 ? 730 : 0); }
-  uint16_t getUnm() { return dev2 ? 570 : (dev3 || dev5 ? 760 : 0); }
-  uint16_t getVnm() { return dev2 ? 600 : (dev3 || dev5 ? 810 : 0); }
-  uint16_t getWnm() { return dev2 ? 650 : (dev3 || dev5 ? 860 : 0); }
+  uint16_t getRnm() { return dev5 || dev3 ? 610 : (dev2 ? 450 : 0); }
+  uint16_t getSnm() { return dev5 || dev3 ? 680 : (dev2 ? 500 : 0); }
+  uint16_t getTnm() { return dev5 || dev3 ? 730 : (dev2 ? 550 : 0); }
+  uint16_t getUnm() { return dev5 || dev3 ? 760 : (dev2 ? 570 : 0); }
+  uint16_t getVnm() { return dev5 || dev3 ? 810 : (dev2 ? 600 : 0); }
+  uint16_t getWnm() { return dev5 || dev3 ? 860 : (dev2 ? 650 : 0); }
+
+  uint16_t getDeviceNumber();
 
 private:
   AS7265X *dev5;
@@ -209,8 +210,8 @@ private:
   void populateReadings();
   boolean _isConnected(uint8_t addr);
   uint8_t virtualReadRegister(uint8_t virtualAddr);
-  uint8_t readRegister(uint8_t addr);
-  boolean writeRegister(uint8_t addr, uint8_t val);
+  uint8_t readRegister(uint8_t i2c_addr, uint8_t addr);
+  boolean writeRegister(uint8_t i2c_addr, uint8_t addr, uint8_t val);
 };
 
 #ifndef AS726X_INCLUDED
@@ -218,10 +219,22 @@ class AS726X_dummy : public AS726XX {
   // This class is to avoid compile error when AS726X.h not found.
   // This class is not implemeted, instantiated.
 public:
-  void enableBulb() {}                    // dummy; do nothing
-  void disableBulb() {}                   // dummy; do nothing
-  void setBulbCurrent(uint8_t current) {} // dummy; do nothing
-  void setIntegrationTime(uint8_t a) {}   // dummy; do nothing
+  void enableBulb() {} // dummy; do nothing
+  void disableBulb() {}
+  void setBulbCurrent(uint8_t current) {}
+  void setIntegrationTime(uint8_t a) {}
+  float getCalibratedViolet() {}
+  float getCalibratedBlue() {}
+  float getCalibratedGreen() {}
+  float getCalibratedYellow() {}
+  float getCalibratedOrange() {}
+  float getCalibratedRed() {}
+  int getViolet() {}
+  int getBlue() {}
+  int getGreen() {}
+  int getYellow() {}
+  int getOrange() {}
+  int getRed() {}
 };
 #endif
 
@@ -235,19 +248,18 @@ class AS7341_dummy : public AS726XX {
   // This class is not implemeted, instantiated.
 public:
   bool begin(uint8_t i2c_addr, TwoWire *wire, int32_t sensor_id = 0) {
-  }                                                 // dummy; do nothing
-  bool setASTEP(uint16_t astep_value) {}            // dummy; do nothing
-  bool setATIME(uint8_t atime_value) {}             // dummy; do nothing
-  bool setGain(as7341_gain_t gain_value) {}         // dummy; do nothing
-  bool startReading(void) {}                        // dummy; do nothing
-  bool checkReadingProgress() {}                    // dummy; do nothing
-  bool getAllChannels(uint16_t *readings_buffer) {} // dummy; do nothing
-  void powerEnable(bool enable_power) {}            // dummy; do nothing
-  bool enableSpectralMeasurement(bool enable_measurement) {
-  }                                              // dummy; do nothing
-  bool enableSystemInterrupt(bool enable_int) {} // dummy; do nothing
-  bool enableLED(bool enable_led) {}             // dummy; do nothing
-  bool setLEDCurrent(uint16_t led_current_ma) {} // dummy; do nothing
+  } // dummy; do nothing
+  bool setASTEP(uint16_t astep_value) {}
+  bool setATIME(uint8_t atime_value) {}
+  bool setGain(as7341_gain_t gain_value) {}
+  bool startReading(void) {}
+  bool checkReadingProgress() {}
+  bool getAllChannels(uint16_t *readings_buffer) {}
+  void powerEnable(bool enable_power) {}
+  bool enableSpectralMeasurement(bool enable_measurement) {}
+  bool enableSystemInterrupt(bool enable_int) {}
+  bool enableLED(bool enable_led) {}
+  bool setLEDCurrent(uint16_t led_current_ma) {}
 };
 #endif
 

@@ -45,6 +45,10 @@ void setup() {
   sensor.setIntegrationCycles(100);
   sensor.setGain(AS7265X_GAIN_64X);
 
+  int deviceNum = sensor.getDeviceNumber();
+  Serial.print("AMS Product Number: ");
+  Serial.println(deviceNum);
+  
   byte deviceType = sensor.getDeviceType();
   Serial.print("AMS Device Type: 0x");
   Serial.println(deviceType, HEX);
