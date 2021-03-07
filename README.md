@@ -11,11 +11,12 @@ Wrapper class for [SparkFun AS7262/7263](https://learn.sparkfun.com/tutorials/as
 Arduino library classes and functions for [AS7262/7263](https://github.com/sparkfun/Sparkfun_AS726X_Arduino_Library) and [AS7265x](https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library) from Sparkfun are similar, but they are slightly different. That of [AS7341](https://github.com/adafruit/Adafruit_AS7341) from Adafruit is certainly different. This means that you must write different codes to use these sensors. By using `AS726XX` class, your code can treat AS7262/AS7263 and AS7341 as if AS7265x is connected - single code works for all. (But of course, it's not capable to mimic missing hardware.)
 
 
-![AS7265x](https://cdn.sparkfun.com/r/500-500/assets/parts/1/3/3/9/3/15050-SparkFun_Triad_Spectroscopy_Sensor_-_AS7265x__Qwiic_-01.jpg "Overview of AS7265x")
+![AS7265x](https://cdn.sparkfun.com/r/500-500/assets/parts/1/3/3/9/3/15050-SparkFun_Triad_Spectroscopy_Sensor_-_AS7265x__Qwiic_-01.jpg "View of AS7265x")
+![AS7341](https://cdn-learn.adafruit.com/guides/cropped_images/000/003/067/medium640/4698_top_ORIG_2020_08.jpg?1597258397 "View of S7341")
 
 ## Using AS726XX-CommonLib
 
-Copy AS726XX.cpp and AS726XX.h to where you want to use. Or put the folder into 'libraries' folder where Arduino can search for files.
+Copy AS726XX.cpp and AS726XX.h to where you want to use. Or put them in a folder under Arduino's 'libraries' folder.
 
 You instantiate an `AS726XX` object. It has the interface same as that of [AS7265x library](https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library). Therefore, you can interchangeably use `AS726XX` object where `AS7265X` object appears.
 
@@ -30,7 +31,7 @@ void setup() {
   }
 ```
 
-You can find examples in [Test_AS726XX.ino](https://github.com/kchinzei/AS726XX-CommonLib/blob/master/Test_AS726XX/Test_AS726XX.ino) and my [ESP8266-AS7265x-Server](https://github.com/kchinzei/ESP8266-AS7265x-Server).
+You can find examples in [test](https://github.com/kchinzei/AS726XX-CommonLib/tree/as7341/test) and my [ESP8266-AS7265x-Server](https://github.com/kchinzei/ESP8266-AS7265x-Server).
 
 ### Array of available channels
 
@@ -48,7 +49,7 @@ for (int i; i<sensor.maxCh; i++) {
 Available arrays are:
 - `uint16_t AS726XX::nm;` : Array of wavelengths in \[nm\].
 - `float AS726XX::readings;` : Array of obtained values.
-- `float AS726XX::cal_params;` : Array of calibration parameters for calibration, multiplied to `getCalibratedA() - W()`.
+- `float AS726XX::cal_params;` : Array of calibration parameters for calibration, multiplied to `getCalibratedA()` to `getCalibaratedW()` for AS7265x and `readAllChannels()` for AS7341.
 
 Array length is in `AS726XX::maxCh`. These are not intended to user modifies its contents except `cal_params`.
 
@@ -80,7 +81,7 @@ AS7341 is a new IC and many minor differences from AS726x/AS7265x series.
 
 Inside AS726XX-CommonLib manages a pointer to the original `AS7265X` or `AS726X` object depending on the detected hardware. It would be nicely rewritten using an abstract class. However doing so requires a lot of rewriting of the SparkFun's original codes. The current approach is not C++ like, but it will absorb future changes in SparkFun codes [when they fix bugs in their codes](https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library/issues/11).
 
-Why not a child class of `AS7265X`?
+##### Why not a child class of `AS7265X`?
 You can also write a class `AS726XX` as a child class of `AS7265X`.
 By doing so you can assure and inherit the interface of `AS7265X`.
 When you connect AS7262/AS7263, you manage an `AS726X` object separately.
